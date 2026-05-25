@@ -5,7 +5,16 @@
 > Learn real LIMS database logic, regulatory compliance, and data validation 
 <img width="1144" height="624" alt="image" src="https://github.com/user-attachments/assets/d12d14ab-4e1b-4c46-bfa1-b58b191e9f49" />
 
-## Dashboard : 
+## 🌐 Live Dashboard
+
+**View the interactive dashboard online:** 
+### **[📊 LIMS Quality Dashboard](https://nikhilkr16.github.io/Laboratory-Middleware-Automation-System-Engine/)**
+
+The dashboard is automatically deployed to GitHub Pages and updates with every push to the main branch.
+
+---
+
+## Dashboard Screenshot: 
 <img width="1835" height="885" alt="image" src="https://github.com/user-attachments/assets/d105b3bb-23ac-404c-8002-e2ecd7f1e6b6" />
 
 ---
@@ -262,6 +271,44 @@ Every transaction is logged:
 - **ALCOA+**: Data integrity principles in regulated labs
 - **ISO 17025**: Requirements for testing laboratories
 - **LIMS Standards**: LabVantage, SLIMS, and industry best practices
+
+---
+
+## 🚀 GitHub Pages Deployment
+
+### Live Dashboard Access
+
+The LIMS Dashboard is automatically deployed to GitHub Pages at:
+**[https://nikhilkr16.github.io/Laboratory-Middleware-Automation-System-Engine/](https://nikhilkr16.github.io/Laboratory-Middleware-Automation-System-Engine/)**
+
+### How It Works
+
+- ✅ GitHub Actions workflow monitors the main branch
+- ✅ Any push automatically triggers a deployment
+- ✅ Dashboard files are served from the `docs/` folder
+- ✅ No external hosting required
+- ✅ Public access to view dashboard without running locally
+
+### Deployment Configuration
+
+- **Workflow**: `.github/workflows/deploy-pages.yml`
+- **Source**: `docs/` folder
+- **Trigger**: Push to `main` or `master` branch
+- **Update**: Typically deploys within 2-3 minutes
+
+### Local Dashboard Usage
+
+You can also view the dashboard locally by opening `dashboard.html` in your browser:
+```bash
+# Windows
+start dashboard.html
+
+# macOS
+open dashboard.html
+
+# Linux
+xdg-open dashboard.html
+```
 
 ---
 
