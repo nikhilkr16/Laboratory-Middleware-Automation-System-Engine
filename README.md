@@ -6,6 +6,7 @@
 <img width="1144" height="624" alt="image" src="https://github.com/user-attachments/assets/d12d14ab-4e1b-4c46-bfa1-b58b191e9f49" />
 
 ## Dashboard : 
+<img width="1835" height="885" alt="image" src="https://github.com/user-attachments/assets/d105b3bb-23ac-404c-8002-e2ecd7f1e6b6" />
 
 ---
 
