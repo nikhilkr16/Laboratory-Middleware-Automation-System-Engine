@@ -37,6 +37,38 @@
             opacity: 0.9;
         }
 
+        .online-status {
+            display: inline-block;
+            margin-left: 12px;
+            padding: 4px 12px;
+            background-color: rgba(29, 158, 117, 0.2);
+            border: 1px solid #1d9e75;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1d9e75;
+            vertical-align: middle;
+        }
+
+        .online-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #1d9e75;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
         .container {
             max-width: 1600px;
             margin: 0 auto;
@@ -358,7 +390,9 @@
 <body>
     <div class="topbar">
         <h1>LIMS Quality Dashboard</h1>
-        <p>Laboratory Information Management System · Real-time Sample Analytics</p>
+        <p>Laboratory Information Management System · Real-time Sample Analytics
+            <span class="online-status"><span class="online-indicator"></span>ONLINE</span>
+        </p>
     </div>
 
     <div class="container">
@@ -383,9 +417,9 @@
                     <label>Concentration</label>
                     <select id="cnFilter">
                         <option value="">All</option>
-                        <option value="low">&lt; 95 mg/mL</option>
+                        <option value="low">< 95 mg/mL</option>
                         <option value="ok">95–105 mg/mL</option>
-                        <option value="high">&gt; 105 mg/mL</option>
+                        <option value="high">> 105 mg/mL</option>
                     </select>
                 </div>
                 <div class="filter-buttons">
