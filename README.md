@@ -5,14 +5,7 @@
 > Learn real LIMS database logic, regulatory compliance, and data validation 
 <img width="1144" height="624" alt="image" src="https://github.com/user-attachments/assets/d12d14ab-4e1b-4c46-bfa1-b58b191e9f49" />
 
-## 🌐 Live Dashboard
 
-**View the interactive dashboard online:** 
-### **[📊 LIMS Quality Dashboard](https://nikhilkr16.github.io/Laboratory-Middleware-Automation-System-Engine/)**
-
-The dashboard is automatically deployed to GitHub Pages and updates with every push to the main branch.
-
----
 
 ## Dashboard Screenshot: 
 <img width="1835" height="885" alt="image" src="https://github.com/user-attachments/assets/d105b3bb-23ac-404c-8002-e2ecd7f1e6b6" />
