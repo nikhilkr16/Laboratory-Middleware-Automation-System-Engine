@@ -8,6 +8,7 @@
 
 
 ## Dashboard Screenshot: 
+https://lims-dashboard.tiiny.site
 <img width="1835" height="885" alt="image" src="https://github.com/user-attachments/assets/d105b3bb-23ac-404c-8002-e2ecd7f1e6b6" />
 
 ---
