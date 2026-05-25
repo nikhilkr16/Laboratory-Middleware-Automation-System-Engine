@@ -1,0 +1,576 @@
+
+<h2 class="sr-only">LIMS Master Ledger Dashboard — interactive Power BI-style analytics for lab sample data</h2>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+
+  .db-shell {
+    background: var(--color-background-tertiary);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .topbar {
+    background: #0f3460;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar-title i { font-size: 20px; color: #e94560; }
+  .topbar-meta { font-size: 12px; opacity: 0.7; }
+
+  .filter-bar {
+    background: var(--color-background-primary);
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    padding: 8px 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-label { font-size: 12px; color: var(--color-text-secondary); font-weight: 500; }
+  .filter-bar select {
+    font-size: 12px;
+    padding: 4px 8px;
+    height: 28px;
+    border-radius: var(--border-radius-md);
+    min-width: 120px;
+  }
+  .filter-bar button {
+    font-size: 12px;
+    padding: 4px 12px;
+    height: 28px;
+    border-radius: var(--border-radius-md);
+    background: #0f3460;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  .filter-bar button:hover { background: #1a4a7a; }
+
+  .content { padding: 16px 20px; }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .kpi {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 12px 14px;
+    border-left: 3px solid #0f3460;
+  }
+  .kpi.pass { border-left-color: #1d9e75; }
+  .kpi.fail { border-left-color: #e24b4a; }
+  .kpi.temp { border-left-color: #ef9f27; }
+  .kpi.conc { border-left-color: #7f77dd; }
+  .kpi-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .kpi-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .kpi-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .chart-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 14px;
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chart-title i { font-size: 15px; }
+
+  .charts-row2 {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .table-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 14px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    table-layout: fixed;
+  }
+  table.data-table th {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 6px 8px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-secondary);
+    text-align: left;
+    cursor: pointer;
+  }
+  table.data-table td {
+    padding: 6px 8px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  table.data-table tr:hover td { background: var(--color-background-secondary); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .badge.pass { background: #e1f5ee; color: #0f6e56; }
+  .badge.fail { background: #fcebeb; color: #a32d2d; }
+
+  .operator-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .op-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .op-name { width: 100px; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .op-bar-wrap { flex: 1; height: 14px; background: var(--color-background-secondary); border-radius: 3px; overflow: hidden; }
+  .op-bar { height: 100%; border-radius: 3px; background: #0f3460; }
+  .op-bar.fail-bar { background: #e24b4a; }
+  .op-count { font-size: 11px; color: var(--color-text-secondary); min-width: 28px; text-align: right; }
+
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    padding: 8px 0 16px;
+  }
+  @media (max-width: 520px) {
+    .charts-row, .charts-row2 { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="db-shell">
+  <div class="topbar">
+    <div class="topbar-title">
+      <i class="ti ti-flask" aria-hidden="true"></i>
+      LIMS Master Ledger — Quality Analytics
+    </div>
+    <div class="topbar-meta" id="last-refresh">Loaded: 2026-05-25</div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label"><i class="ti ti-filter" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> Filters:</span>
+    <span class="filter-label">Operator</span>
+    <select id="f-operator"><option value="all">All Operators</option></select>
+    <span class="filter-label">Status</span>
+    <select id="f-status">
+      <option value="all">All</option>
+      <option value="PASS">PASS</option>
+      <option value="FAIL">FAIL (OOS)</option>
+    </select>
+    <span class="filter-label">Conc. Range</span>
+    <select id="f-conc">
+      <option value="all">All</option>
+      <option value="low">&lt; 95</option>
+      <option value="ok">95–105</option>
+      <option value="high">&gt; 105</option>
+    </select>
+    <button onclick="applyFilters()"><i class="ti ti-refresh" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> Apply</button>
+    <button onclick="resetFilters()" style="background:#888;">Reset</button>
+  </div>
+
+  <div class="content">
+
+    <div class="kpi-row" id="kpi-row"></div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title"><i class="ti ti-chart-donut" aria-hidden="true"></i> Pass / Fail Distribution</div>
+        <div style="position:relative;height:200px;">
+          <canvas id="donutChart" role="img" aria-label="Donut chart showing pass vs fail sample distribution"></canvas>
+        </div>
+        <div id="donut-legend" style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--color-text-secondary);"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> Pass/Fail by Operator</div>
+        <div style="position:relative;" id="bar-wrap">
+          <canvas id="barChart" role="img" aria-label="Grouped bar chart of pass and fail counts per operator"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-row2">
+      <div class="chart-card">
+        <div class="chart-title"><i class="ti ti-chart-line" aria-hidden="true"></i> Concentration Over Sample Sequence</div>
+        <div style="position:relative;height:200px;">
+          <canvas id="lineChart" role="img" aria-label="Line chart of concentration values across sample sequence"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><i class="ti ti-user-check" aria-hidden="true"></i> Samples per Operator</div>
+        <div class="operator-grid" id="op-grid" style="margin-top:4px;"></div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title"><i class="ti ti-temperature" aria-hidden="true"></i> Temperature Distribution</div>
+        <div style="position:relative;height:200px;">
+          <canvas id="tempChart" role="img" aria-label="Histogram of temperature readings across all samples"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><i class="ti ti-chart-scatter" aria-hidden="true"></i> Temp vs Concentration</div>
+        <div style="position:relative;height:200px;">
+          <canvas id="scatterChart" role="img" aria-label="Scatter plot of temperature vs concentration, colored by pass/fail"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="chart-title" style="margin-bottom:10px;"><i class="ti ti-table" aria-hidden="true"></i> Sample Detail Table <span style="font-weight:400;font-size:11px;color:var(--color-text-secondary);" id="row-count"></span></div>
+      <table class="data-table">
+        <colgroup>
+          <col style="width:90px"><col style="width:130px"><col style="width:90px"><col style="width:110px"><col style="width:160px"><col style="width:170px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Sample ID</th>
+            <th>Conc. (mg/mL)</th>
+            <th>Temp (°C)</th>
+            <th>Operator</th>
+            <th>Timestamp</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="footer">LIMS_Engine_V1 &nbsp;·&nbsp; <span id="total-records"></span> records loaded &nbsp;·&nbsp; Data Integrity verified</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const RAW = [
+  ["SMP-1001",90.97,23.3,"Dr. Alcoa","2026-05-25 08:42:57","FAIL"],
+  ["SMP-1001",90.97,23.3,"Dr. Alcoa","2026-05-25 08:42:57","FAIL"],
+  ["SMP-1002",101.61,23.9,"Dr. Smith","2026-05-25 08:43:02","PASS"],
+  ["SMP-1003",107.20,22.7,"Dr. Alcoa","2026-05-25 08:43:07","FAIL"],
+  ["SMP-1004",102.09,25.4,"Analyst Jones","2026-05-25 08:43:12","PASS"],
+  ["SMP-1005",100.56,25.2,"Analyst Jones","2026-05-25 08:43:17","PASS"],
+  ["SMP-1006",107.33,25.5,"Analyst Jones","2026-05-25 08:43:22","FAIL"],
+  ["SMP-1007",102.58,24.1,"Analyst Jones","2026-05-25 08:43:27","PASS"],
+  ["SMP-1008",96.65,24.8,"Dr. Alcoa","2026-05-25 08:43:32","PASS"],
+  ["SMP-1009",106.86,22.8,"Analyst Jones","2026-05-25 08:43:37","FAIL"],
+  ["SMP-1010",105.67,23.4,"Analyst Jones","2026-05-25 08:43:42","FAIL"],
+  ["SMP-1011",106.10,24.8,"Analyst Jones","2026-05-25 08:43:47","FAIL"],
+  ["SMP-1012",109.65,23.0,"Dr. Alcoa","2026-05-25 08:43:52","FAIL"],
+  ["SMP-1013",101.40,22.9,"Analyst Jones","2026-05-25 08:43:57","PASS"],
+  ["SMP-1014",101.72,25.1,"Analyst Jones","2026-05-25 08:44:02","PASS"],
+  ["SMP-1015",99.16,21.6,"Analyst Jones","2026-05-25 08:44:07","PASS"],
+  ["SMP-1016",94.42,24.5,"Analyst Jones","2026-05-25 08:44:12","FAIL"],
+  ["SMP-1017",92.31,21.9,"Dr. Alcoa","2026-05-25 08:44:17","FAIL"],
+  ["SMP-1018",102.42,21.9,"Dr. Alcoa","2026-05-25 08:44:22","PASS"],
+  ["SMP-1019",108.38,25.4,"Analyst Jones","2026-05-25 08:44:28","FAIL"],
+  ["SMP-1020",95.21,24.9,"Dr. Smith","2026-05-25 08:44:33","PASS"],
+  ["SMP-1021",101.40,24.1,"Dr. Alcoa","2026-05-25 08:44:38","PASS"],
+  ["SMP-1022",108.15,23.4,"Dr. Alcoa","2026-05-25 08:44:43","FAIL"],
+  ["SMP-1023",101.43,24.2,"Dr. Smith","2026-05-25 08:44:48","PASS"],
+  ["SMP-1024",96.73,22.8,"Analyst Jones","2026-05-25 08:44:53","PASS"],
+  ["SMP-1025",95.18,24.2,"Dr. Alcoa","2026-05-25 08:44:58","PASS"],
+  ["SMP-1026",108.64,22.7,"Analyst Jones","2026-05-25 08:45:03","FAIL"],
+  ["SMP-1027",102.02,24.5,"Dr. Alcoa","2026-05-25 08:45:08","PASS"],
+  ["SMP-1028",108.41,22.5,"Analyst Jones","2026-05-25 08:45:13","FAIL"],
+  ["SMP-1029",101.18,23.6,"Analyst Jones","2026-05-25 08:45:18","PASS"],
+  ["SMP-1030",103.91,24.2,"Dr. Alcoa","2026-05-25 08:45:23","PASS"],
+  ["SMP-1031",107.45,24.7,"Dr. Alcoa","2026-05-25 08:45:28","FAIL"],
+  ["SMP-1032",90.39,23.7,"Analyst Jones","2026-05-25 08:45:33","FAIL"],
+  ["SMP-1033",104.05,22.6,"Dr. Smith","2026-05-25 08:45:38","PASS"],
+  ["SMP-1034",95.35,25.4,"Analyst Jones","2026-05-25 08:45:43","PASS"],
+  ["SMP-1035",92.91,23.6,"Analyst Jones","2026-05-25 08:45:48","FAIL"],
+  ["SMP-1036",97.56,21.8,"Dr. Smith","2026-05-25 08:45:53","PASS"],
+  ["SMP-1037",97.58,23.4,"Analyst Jones","2026-05-25 08:45:58","PASS"],
+  ["SMP-1038",95.82,22.6,"Analyst Jones","2026-05-25 08:46:03","PASS"],
+  ["SMP-1039",105.00,25.5,"Analyst Jones","2026-05-25 08:46:08","PASS"],
+  ["SMP-1040",101.68,21.8,"Dr. Smith","2026-05-25 08:46:13","PASS"],
+  ["SMP-1041",96.59,24.1,"Analyst Jones","2026-05-25 08:46:18","PASS"],
+  ["SMP-1042",108.61,22.7,"Analyst Jones","2026-05-25 08:46:23","FAIL"],
+  ["SMP-1043",92.83,23.4,"Dr. Smith","2026-05-25 08:46:28","FAIL"],
+  ["SMP-1044",93.06,21.8,"Dr. Smith","2026-05-25 08:46:33","FAIL"],
+  ["SMP-1045",101.46,25.2,"Analyst Jones","2026-05-25 08:46:38","PASS"],
+  ["SMP-1046",102.54,21.6,"Dr. Smith","2026-05-25 08:46:43","PASS"],
+  ["SMP-1047",97.55,23.4,"Analyst Jones","2026-05-25 08:46:48","PASS"],
+  ["SMP-1048",106.21,23.7,"Dr. Alcoa","2026-05-25 08:46:53","FAIL"],
+  ["SMP-1049",100.77,25.5,"Dr. Smith","2026-05-25 08:46:58","PASS"],
+  ["SMP-1050",93.92,24.5,"Analyst Jones","2026-05-25 08:47:03","FAIL"],
+  ["SMP-1051",105.04,25.0,"Dr. Alcoa","2026-05-25 08:47:08","FAIL"],
+  ["SMP-1052",108.82,22.0,"Analyst Jones","2026-05-25 08:47:13","FAIL"],
+  ["SMP-1053",99.45,23.4,"Analyst Jones","2026-05-25 08:47:18","PASS"],
+  ["SMP-1054",106.06,25.4,"Analyst Jones","2026-05-25 08:47:23","FAIL"],
+  ["SMP-1055",96.24,24.0,"Dr. Smith","2026-05-25 08:47:28","PASS"],
+  ["SMP-1056",91.19,24.9,"Dr. Smith","2026-05-25 08:47:33","FAIL"],
+  ["SMP-1057",105.16,21.9,"Dr. Smith","2026-05-25 08:47:38","FAIL"],
+  ["SMP-1058",104.50,24.9,"Dr. Smith","2026-05-25 08:47:43","PASS"],
+  ["SMP-1059",101.04,21.7,"Dr. Alcoa","2026-05-25 08:47:48","PASS"],
+  ["SMP-1060",108.42,24.3,"Dr. Alcoa","2026-05-25 08:47:53","FAIL"],
+  ["SMP-1061",102.61,22.9,"Analyst Jones","2026-05-25 08:47:58","PASS"],
+  ["SMP-1062",96.03,25.0,"Dr. Smith","2026-05-25 08:48:03","PASS"],
+  ["SMP-1063",100.76,25.1,"Analyst Jones","2026-05-25 08:48:08","PASS"],
+  ["SMP-1064",104.98,23.7,"Dr. Alcoa","2026-05-25 08:48:13","PASS"],
+  ["SMP-1065",93.23,24.5,"Dr. Smith","2026-05-25 08:48:18","FAIL"],
+  ["SMP-1066",105.06,24.0,"Analyst Jones","2026-05-25 08:48:23","FAIL"],
+  ["SMP-1067",99.09,24.4,"Dr. Alcoa","2026-05-25 08:48:28","PASS"],
+  ["SMP-1068",103.89,21.8,"Analyst Jones","2026-05-25 08:48:33","PASS"],
+  ["SMP-1069",99.46,25.2,"Analyst Jones","2026-05-25 08:48:38","PASS"],
+  ["SMP-1070",105.72,23.0,"Dr. Alcoa","2026-05-25 08:48:43","FAIL"],
+];
+
+let filtered = [...RAW];
+let donutInst, barInst, lineInst, tempInst, scatterInst;
+
+function getOperators() {
+  return [...new Set(RAW.map(r => r[3]))].sort();
+}
+
+function initFilters() {
+  const sel = document.getElementById('f-operator');
+  getOperators().forEach(op => {
+    const o = document.createElement('option');
+    o.value = op; o.textContent = op;
+    sel.appendChild(o);
+  });
+}
+
+function applyFilters() {
+  const op = document.getElementById('f-operator').value;
+  const st = document.getElementById('f-status').value;
+  const cn = document.getElementById('f-conc').value;
+  filtered = RAW.filter(r => {
+    if (op !== 'all' && r[3] !== op) return false;
+    if (st !== 'all') {
+      if (st === 'PASS' && r[5] !== 'PASS') return false;
+      if (st === 'FAIL' && r[5] !== 'FAIL') return false;
+    }
+    if (cn !== 'all') {
+      if (cn === 'low' && r[1] >= 95) return false;
+      if (cn === 'ok' && (r[1] < 95 || r[1] > 105)) return false;
+      if (cn === 'high' && r[1] <= 105) return false;
+    }
+    return true;
+  });
+  render();
+}
+
+function resetFilters() {
+  document.getElementById('f-operator').value = 'all';
+  document.getElementById('f-status').value = 'all';
+  document.getElementById('f-conc').value = 'all';
+  filtered = [...RAW];
+  render();
+}
+
+function render() {
+  renderKPIs();
+  renderDonut();
+  renderBar();
+  renderLine();
+  renderOpGrid();
+  renderTemp();
+  renderScatter();
+  renderTable();
+}
+
+function renderKPIs() {
+  const total = filtered.length;
+  const pass = filtered.filter(r => r[5] === 'PASS').length;
+  const fail = total - pass;
+  const passRate = total ? Math.round((pass/total)*100) : 0;
+  const avgConc = total ? (filtered.reduce((a,r) => a+r[1],0)/total).toFixed(2) : '—';
+  const avgTemp = total ? (filtered.reduce((a,r) => a+r[2],0)/total).toFixed(1) : '—';
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Total Samples</div><div class="kpi-value">${total}</div><div class="kpi-sub">in selection</div></div>
+    <div class="kpi pass"><div class="kpi-label">PASS</div><div class="kpi-value" style="color:#1d9e75;">${pass}</div><div class="kpi-sub">${passRate}% pass rate</div></div>
+    <div class="kpi fail"><div class="kpi-label">FAIL (OOS)</div><div class="kpi-value" style="color:#e24b4a;">${fail}</div><div class="kpi-sub">${total ? Math.round((fail/total)*100) : 0}% fail rate</div></div>
+    <div class="kpi conc"><div class="kpi-label">Avg Conc.</div><div class="kpi-value">${avgConc}</div><div class="kpi-sub">mg/mL</div></div>
+    <div class="kpi temp"><div class="kpi-label">Avg Temp</div><div class="kpi-value">${avgTemp}</div><div class="kpi-sub">°C</div></div>
+  `;
+  document.getElementById('total-records').textContent = RAW.length + ' total';
+}
+
+function renderDonut() {
+  const pass = filtered.filter(r=>r[5]==='PASS').length;
+  const fail = filtered.length - pass;
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  if (donutInst) donutInst.destroy();
+  donutInst = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels:['PASS','FAIL (OOS)'], datasets:[{ data:[pass,fail], backgroundColor:['#1d9e75','#e24b4a'], borderWidth:2, borderColor:'#fff', hoverOffset:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => ` ${c.label}: ${c.raw} (${Math.round(c.raw/(pass+fail)*100)}%)` } } }, cutout:'65%' }
+  });
+  document.getElementById('donut-legend').innerHTML = `
+    <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#1d9e75;"></span>PASS ${pass}</span>
+    <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#e24b4a;"></span>FAIL ${fail}</span>
+  `;
+}
+
+function renderBar() {
+  const ops = getOperators();
+  const passData = ops.map(op => filtered.filter(r=>r[3]===op&&r[5]==='PASS').length);
+  const failData = ops.map(op => filtered.filter(r=>r[3]===op&&r[5]==='FAIL').length);
+  const wrap = document.getElementById('bar-wrap');
+  wrap.style.height = Math.max(180, ops.length*60+60)+'px';
+  wrap.style.position = 'relative';
+  const ctx = document.getElementById('barChart').getContext('2d');
+  if (barInst) barInst.destroy();
+  barInst = new Chart(ctx, {
+    type:'bar',
+    data:{ labels: ops.map(o=>o.replace('Analyst ','').replace('Dr. ','')), datasets:[
+      { label:'PASS', data:passData, backgroundColor:'#1d9e75', borderRadius:3, borderSkipped:false },
+      { label:'FAIL', data:failData, backgroundColor:'#e24b4a', borderRadius:3, borderSkipped:false }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{display:false}, tooltip:{} },
+      scales:{ x:{ stacked:false, grid:{color:'rgba(120,120,120,0.1)'}, ticks:{color:'#888',font:{size:11}} }, y:{ ticks:{color:'#888',font:{size:11}} } }
+    }
+  });
+}
+
+function renderLine() {
+  const pts = filtered.map((r,i)=>[i+1, r[1], r[5]]);
+  const ctx = document.getElementById('lineChart').getContext('2d');
+  if (lineInst) lineInst.destroy();
+  lineInst = new Chart(ctx, {
+    type:'line',
+    data:{ labels: pts.map(p=>p[0]), datasets:[
+      { label:'Concentration', data: pts.map(p=>p[1]), borderColor:'#7f77dd', backgroundColor:'rgba(127,119,221,0.08)', borderWidth:2, pointRadius: pts.map(p=>p[2]==='FAIL'?4:2), pointBackgroundColor: pts.map(p=>p[2]==='FAIL'?'#e24b4a':'#7f77dd'), tension:0.3, fill:true }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, annotation:{} },
+      scales:{
+        x:{ ticks:{color:'#888',font:{size:10}, maxTicksLimit:10}, grid:{display:false} },
+        y:{ min:88, max:112, ticks:{color:'#888',font:{size:10}}, grid:{color:'rgba(120,120,120,0.1)'} }
+      }
+    }
+  });
+}
+
+function renderOpGrid() {
+  const ops = getOperators();
+  const maxCount = Math.max(...ops.map(op=>filtered.filter(r=>r[3]===op).length));
+  const html = ops.map(op=>{
+    const total = filtered.filter(r=>r[3]===op).length;
+    const pass = filtered.filter(r=>r[3]===op&&r[5]==='PASS').length;
+    const fail = total-pass;
+    const pct = maxCount ? Math.round((total/maxCount)*100) : 0;
+    const fpct = total ? Math.round((fail/total)*100) : 0;
+    return `<div class="op-row">
+      <span class="op-name">${op.replace('Analyst ','A. ')}</span>
+      <div class="op-bar-wrap"><div class="op-bar" style="width:${pct}%"></div></div>
+      <span class="op-count">${total}</span>
+      <span style="font-size:10px;color:#e24b4a;min-width:36px;text-align:right;">${fpct}% OOS</span>
+    </div>`;
+  }).join('');
+  document.getElementById('op-grid').innerHTML = html;
+}
+
+function renderTemp() {
+  const bins = ['21–22','22–23','23–24','24–25','25–26'];
+  const counts = [0,0,0,0,0];
+  filtered.forEach(r=>{
+    const t = r[2];
+    if(t<22) counts[0]++;
+    else if(t<23) counts[1]++;
+    else if(t<24) counts[2]++;
+    else if(t<25) counts[3]++;
+    else counts[4]++;
+  });
+  const ctx = document.getElementById('tempChart').getContext('2d');
+  if (tempInst) tempInst.destroy();
+  tempInst = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:bins, datasets:[{ label:'Count', data:counts, backgroundColor:'#378add', borderRadius:4 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{ticks:{color:'#888',font:{size:11}},grid:{display:false}}, y:{ticks:{color:'#888',font:{size:11}},grid:{color:'rgba(120,120,120,0.1)'}} }
+    }
+  });
+}
+
+function renderScatter() {
+  const passData = filtered.filter(r=>r[5]==='PASS').map(r=>({x:r[2],y:r[1]}));
+  const failData = filtered.filter(r=>r[5]==='FAIL').map(r=>({x:r[2],y:r[1]}));
+  const ctx = document.getElementById('scatterChart').getContext('2d');
+  if (scatterInst) scatterInst.destroy();
+  scatterInst = new Chart(ctx, {
+    type:'scatter',
+    data:{ datasets:[
+      { label:'PASS', data:passData, backgroundColor:'rgba(29,158,117,0.7)', pointRadius:5 },
+      { label:'FAIL', data:failData, backgroundColor:'rgba(226,75,74,0.7)', pointRadius:5, pointStyle:'triangle' }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ min:21, max:26, title:{display:true,text:'Temp (°C)',color:'#888',font:{size:10}}, ticks:{color:'#888',font:{size:10}}, grid:{color:'rgba(120,120,120,0.1)'} },
+        y:{ min:88, max:112, title:{display:true,text:'Conc. (mg/mL)',color:'#888',font:{size:10}}, ticks:{color:'#888',font:{size:10}}, grid:{color:'rgba(120,120,120,0.1)'} }
+      }
+    }
+  });
+}
+
+function renderTable() {
+  const shown = filtered.slice(0,30);
+  document.getElementById('row-count').textContent = `(showing ${shown.length} of ${filtered.length})`;
+  document.getElementById('table-body').innerHTML = shown.map(r=>`
+    <tr>
+      <td>${r[0]}</td>
+      <td>${r[1].toFixed(2)}</td>
+      <td>${r[2].toFixed(1)}</td>
+      <td>${r[3]}</td>
+      <td>${r[4]}</td>
+      <td><span class="badge ${r[5]==='PASS'?'pass':'fail'}">${r[5]==='PASS'?'PASS':'FAIL (OOS)'}</span></td>
+    </tr>
+  `).join('');
+}
+
+initFilters();
+render();
+</script>
