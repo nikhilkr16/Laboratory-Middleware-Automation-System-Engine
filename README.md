@@ -249,43 +249,10 @@ Every transaction is logged:
 
 ---
 
-## 💡 Learning Pathways
-
-### Beginner (Week 1)
-- [ ] Run `instrument.py` and examine raw data
-- [ ] Read `lims_processor.py` line by line
-- [ ] Understand the validation logic
-- [ ] Check the master ledger for patterns
-
-### Intermediate (Week 2-3)
-- [ ] Modify validation specs (e.g., 90-110 instead of 95-105)
-- [ ] Add new metadata fields (batch ID, lot number)
-- [ ] Implement rejection logic for OOS samples
-- [ ] Create summary reports
-
-### Advanced (Week 4+)
-- [ ] Migrate from CSV to SQLite database
-- [ ] Add user authentication
-- [ ] Implement change control procedures
-- [ ] Build a web dashboard for results
-- [ ] Add data export capabilities (JSON, PDF)
-- [ ] Implement electronic signature workflows
-
----
 
 
 
-## 🔧 Customization Ideas
 
-- Add more parameters (pH, viscosity, appearance)
-- Implement batch-level approvals
-- Add retest logic for OOS samples
-- Build email notifications for failures
-- Create PDF certificates of analysis
-- Implement user roles (analyst, reviewer, approver)
-- Add data trending and statistical analysis
-
----
 
 
 ## 📖 References
