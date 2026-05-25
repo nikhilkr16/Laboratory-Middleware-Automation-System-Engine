@@ -1,1 +1,800 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIMS Quality Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .topbar {
+            background: linear-gradient(135deg, #0f3460 0%, #1a4d7a 100%);
+            color: white;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .topbar h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .topbar p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f3460;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8f5e9;
+        }
+
+        .filters {
+            background: white;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #0f3460;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .filter-group select {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #1d9e75;
+            box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.1);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-apply {
+            background: linear-gradient(135deg, #1d9e75 0%, #148860 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(29, 158, 117, 0.3);
+        }
+
+        .btn-apply:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(29, 158, 117, 0.4);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%);
+            color: #333;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+            padding: 20px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #1d9e75;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .kpi-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #0f3460;
+            line-height: 1;
+        }
+
+        .kpi-subtext {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 6px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-top: 3px solid #7f77dd;
+            transition: box-shadow 0.2s;
+        }
+
+        .chart-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+        
+        canvas {
+            max-height: 280px;
+        }
+
+        .operator-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .operator-row {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: linear-gradient(90deg, #f9f9f9 0%, #ffffff 100%);
+            border-radius: 4px;
+            font-size: 12px;
+            border-left: 3px solid #7f77dd;
+            transition: background 0.2s;
+        }
+
+        .operator-row:hover {
+            background: linear-gradient(90deg, #f0f0f0 0%, #f9f9f9 100%);
+        }
+
+        .operator-name {
+            width: 100px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .operator-bar {
+            flex: 1;
+            height: 18px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            margin: 0 10px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .bar-pass {
+            background: #1d9e75;
+            height: 100%;
+        }
+
+        .bar-fail {
+            background: #e24b4a;
+            height: 100%;
+        }
+
+        .operator-stat {
+            width: 70px;
+            text-align: right;
+            color: #666;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .table-wrapper {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border-top: 3px solid #0f3460;
+        }
+
+        .table-header {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%);
+        }
+
+        .table-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f3460;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            background: linear-gradient(90deg, #f9f9f9 0%, #f0f0f0 100%);
+            border-bottom: 2px solid #ddd;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f3460;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        th:hover {
+            background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 100%);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge-pass {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #1d9e75;
+        }
+
+        .badge-fail {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #e24b4a;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>LIMS Quality Dashboard</h1>
+        <p>Laboratory Information Management System · Real-time Sample Analytics</p>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h2 class="section-title">Filters & Controls</h2>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Operator</label>
+                    <select id="opFilter">
+                        <option value="">All Operators</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="stFilter">
+                        <option value="">All</option>
+                        <option value="PASS">PASS</option>
+                        <option value="FAIL">FAIL</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Concentration</label>
+                    <select id="cnFilter">
+                        <option value="">All</option>
+                        <option value="low">&lt; 95 mg/mL</option>
+                        <option value="ok">95–105 mg/mL</option>
+                        <option value="high">&gt; 105 mg/mL</option>
+                    </select>
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-apply" onclick="applyFilters()">Apply</button>
+                    <button class="btn btn-reset" onclick="resetFilters()">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Key Performance Indicators</h2>
+            <div class="kpi-grid" id="kpiRow"></div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Results Analysis</h2>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Result Distribution</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart1"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Concentration Sequence</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart3"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Operator Performance</h2>
+            <div class="charts-grid">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-title">Results by Operator (Stacked)</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart2"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-card" style="margin-top: 12px;">
+                <div class="chart-title">Operator Performance Summary</div>
+                <div class="operator-summary" id="opSummary"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Environmental Conditions</h2>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Temperature Distribution</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart4"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Temperature vs Concentration</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart5"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Sample Details</h2>
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <h3>Filtered Results (First 30) — Click column headers to sort</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('id')">Sample ID</th>
+                            <th onclick="sortTable('conc')">Concentration</th>
+                            <th onclick="sortTable('temp')">Temperature</th>
+                            <th onclick="sortTable('op')">Operator</th>
+                            <th onclick="sortTable('ts')">Timestamp</th>
+                            <th onclick="sortTable('st')">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const data = [
+["SMP-1001",90.97,23.3,"Dr. Alcoa","2026-05-25 08:42:57","FAIL"],
+["SMP-1001",90.97,23.3,"Dr. Alcoa","2026-05-25 08:42:57","FAIL"],
+["SMP-1002",101.61,23.9,"Dr. Smith","2026-05-25 08:43:02","PASS"],
+["SMP-1003",107.2,22.7,"Dr. Alcoa","2026-05-25 08:43:07","FAIL"],
+["SMP-1004",102.09,25.4,"Analyst Jones","2026-05-25 08:43:12","PASS"],
+["SMP-1005",100.56,25.2,"Analyst Jones","2026-05-25 08:43:17","PASS"],
+["SMP-1006",107.33,25.5,"Analyst Jones","2026-05-25 08:43:22","FAIL"],
+["SMP-1007",102.58,24.1,"Analyst Jones","2026-05-25 08:43:27","PASS"],
+["SMP-1008",96.65,24.8,"Dr. Alcoa","2026-05-25 08:43:32","PASS"],
+["SMP-1009",106.86,22.8,"Analyst Jones","2026-05-25 08:43:37","FAIL"],
+["SMP-1010",105.67,23.4,"Analyst Jones","2026-05-25 08:43:42","FAIL"],
+["SMP-1011",106.1,24.8,"Analyst Jones","2026-05-25 08:43:47","FAIL"],
+["SMP-1012",109.65,23.0,"Dr. Alcoa","2026-05-25 08:43:52","FAIL"],
+["SMP-1013",101.4,22.9,"Analyst Jones","2026-05-25 08:43:57","PASS"],
+["SMP-1014",101.72,25.1,"Analyst Jones","2026-05-25 08:44:02","PASS"],
+["SMP-1015",99.16,21.6,"Analyst Jones","2026-05-25 08:44:07","PASS"],
+["SMP-1016",94.42,24.5,"Analyst Jones","2026-05-25 08:44:12","FAIL"],
+["SMP-1017",92.31,21.9,"Dr. Alcoa","2026-05-25 08:44:17","FAIL"],
+["SMP-1018",102.42,21.9,"Dr. Alcoa","2026-05-25 08:44:22","PASS"],
+["SMP-1019",108.38,25.4,"Analyst Jones","2026-05-25 08:44:28","FAIL"],
+["SMP-1020",95.21,24.9,"Dr. Smith","2026-05-25 08:44:33","PASS"],
+["SMP-1021",101.4,24.1,"Dr. Alcoa","2026-05-25 08:44:38","PASS"],
+["SMP-1022",108.15,23.4,"Dr. Alcoa","2026-05-25 08:44:43","FAIL"],
+["SMP-1023",101.43,24.2,"Dr. Smith","2026-05-25 08:44:48","PASS"],
+["SMP-1024",96.73,22.8,"Analyst Jones","2026-05-25 08:44:53","PASS"],
+["SMP-1025",95.18,24.2,"Dr. Alcoa","2026-05-25 08:44:58","PASS"],
+["SMP-1026",108.64,22.7,"Analyst Jones","2026-05-25 08:45:03","FAIL"],
+["SMP-1027",102.02,24.5,"Dr. Alcoa","2026-05-25 08:45:08","PASS"],
+["SMP-1028",108.41,22.5,"Analyst Jones","2026-05-25 08:45:13","FAIL"],
+["SMP-1029",101.18,23.6,"Analyst Jones","2026-05-25 08:45:18","PASS"],
+["SMP-1030",103.91,24.2,"Dr. Alcoa","2026-05-25 08:45:23","PASS"],
+["SMP-1031",107.45,24.7,"Dr. Alcoa","2026-05-25 08:45:28","FAIL"],
+["SMP-1032",90.39,23.7,"Analyst Jones","2026-05-25 08:45:33","FAIL"],
+["SMP-1033",104.05,22.6,"Dr. Smith","2026-05-25 08:45:38","PASS"],
+["SMP-1034",95.35,25.4,"Analyst Jones","2026-05-25 08:45:43","PASS"],
+["SMP-1035",92.91,23.6,"Analyst Jones","2026-05-25 08:45:48","FAIL"],
+["SMP-1036",97.56,21.8,"Dr. Smith","2026-05-25 08:45:53","PASS"],
+["SMP-1037",97.58,23.4,"Analyst Jones","2026-05-25 08:45:58","PASS"],
+["SMP-1038",95.82,22.6,"Analyst Jones","2026-05-25 08:46:03","PASS"],
+["SMP-1039",105.0,25.5,"Analyst Jones","2026-05-25 08:46:08","PASS"],
+["SMP-1040",101.68,21.8,"Dr. Smith","2026-05-25 08:46:13","PASS"],
+["SMP-1041",96.59,24.1,"Analyst Jones","2026-05-25 08:46:18","PASS"],
+["SMP-1042",108.61,22.7,"Analyst Jones","2026-05-25 08:46:23","FAIL"],
+["SMP-1043",92.83,23.4,"Dr. Smith","2026-05-25 08:46:28","FAIL"],
+["SMP-1044",93.06,21.8,"Dr. Smith","2026-05-25 08:46:33","FAIL"],
+["SMP-1045",101.46,25.2,"Analyst Jones","2026-05-25 08:46:38","PASS"],
+["SMP-1046",102.54,21.6,"Dr. Smith","2026-05-25 08:46:43","PASS"],
+["SMP-1047",97.55,23.4,"Analyst Jones","2026-05-25 08:46:48","PASS"],
+["SMP-1048",106.21,23.7,"Dr. Alcoa","2026-05-25 08:46:53","FAIL"],
+["SMP-1049",100.77,25.5,"Dr. Smith","2026-05-25 08:46:58","PASS"],
+["SMP-1050",93.92,24.5,"Analyst Jones","2026-05-25 08:47:03","FAIL"],
+["SMP-1051",105.04,25.0,"Dr. Alcoa","2026-05-25 08:47:08","FAIL"],
+["SMP-1052",108.82,22.0,"Analyst Jones","2026-05-25 08:47:13","FAIL"],
+["SMP-1053",99.45,23.4,"Analyst Jones","2026-05-25 08:47:18","PASS"],
+["SMP-1054",106.06,25.4,"Analyst Jones","2026-05-25 08:47:23","FAIL"],
+["SMP-1055",96.24,24.0,"Dr. Smith","2026-05-25 08:47:28","PASS"],
+["SMP-1056",91.19,24.9,"Dr. Smith","2026-05-25 08:47:33","FAIL"],
+["SMP-1057",105.16,21.9,"Dr. Smith","2026-05-25 08:47:38","FAIL"],
+["SMP-1058",104.5,24.9,"Dr. Smith","2026-05-25 08:47:43","PASS"],
+["SMP-1059",101.04,21.7,"Dr. Alcoa","2026-05-25 08:47:48","PASS"],
+["SMP-1060",108.42,24.3,"Dr. Alcoa","2026-05-25 08:47:53","FAIL"],
+["SMP-1061",102.61,22.9,"Analyst Jones","2026-05-25 08:47:58","PASS"],
+["SMP-1062",96.03,25.0,"Dr. Smith","2026-05-25 08:48:03","PASS"],
+["SMP-1063",100.76,25.1,"Analyst Jones","2026-05-25 08:48:08","PASS"],
+["SMP-1064",104.98,23.7,"Dr. Alcoa","2026-05-25 08:48:13","PASS"],
+["SMP-1065",93.23,24.5,"Dr. Smith","2026-05-25 08:48:18","FAIL"],
+["SMP-1066",105.06,24.0,"Analyst Jones","2026-05-25 08:48:23","FAIL"],
+["SMP-1067",99.09,24.4,"Dr. Alcoa","2026-05-25 08:48:28","PASS"],
+["SMP-1068",103.89,21.8,"Analyst Jones","2026-05-25 08:48:33","PASS"],
+["SMP-1069",99.46,25.2,"Analyst Jones","2026-05-25 08:48:38","PASS"],
+["SMP-1070",105.72,23.0,"Dr. Alcoa","2026-05-25 08:48:43","FAIL"]
+];
+
+let filtered = [...data];
+let charts = {};
+let sortCol = null;
+
+function init() {
+    console.log('Dashboard initializing...', typeof Chart);
+    const ops = [...new Set(data.map(r => r[3]))].sort();
+    const sel = document.getElementById('opFilter');
+    ops.forEach(op => {
+        const opt = document.createElement('option');
+        opt.value = op;
+        opt.textContent = op;
+        sel.appendChild(opt);
+    });
+    console.log('Filters populated, rendering...');
+    render();
+    console.log('Dashboard rendered successfully');
+}
+
+function applyFilters() {
+    const op = document.getElementById('opFilter').value;
+    const st = document.getElementById('stFilter').value;
+    const cn = document.getElementById('cnFilter').value;
+
+    filtered = data.filter(r => {
+        if (op && r[3] !== op) return false;
+        if (st && r[5] !== st) return false;
+        const conc = r[1];
+        if (cn === 'low' && conc >= 95) return false;
+        if (cn === 'ok' && (conc < 95 || conc > 105)) return false;
+        if (cn === 'high' && conc <= 105) return false;
+        return true;
+    });
+    render();
+}
+
+function resetFilters() {
+    document.getElementById('opFilter').value = '';
+    document.getElementById('stFilter').value = '';
+    document.getElementById('cnFilter').value = '';
+    filtered = [...data];
+    render();
+}
+
+function render() {
+    renderKPI();
+    renderChart1();
+    renderChart2();
+    renderChart3();
+    renderChart4();
+    renderChart5();
+    renderOpSummary();
+    renderTable();
+}
+
+function renderKPI() {
+    const total = filtered.length;
+    const pass = filtered.filter(r => r[5] === 'PASS').length;
+    const fail = total - pass;
+    const passRate = total ? Math.round(pass / total * 100) : 0;
+    const failRate = 100 - passRate;
+    const avgConc = total ? (filtered.reduce((a, r) => a + r[1], 0) / total).toFixed(2) : 0;
+    const avgTemp = total ? (filtered.reduce((a, r) => a + r[2], 0) / total).toFixed(1) : 0;
+
+    document.getElementById('kpiRow').innerHTML = `
+        <div class="kpi-card"><div class="kpi-label">Total Samples</div><div class="kpi-value">${total}</div></div>
+        <div class="kpi-card"><div class="kpi-label">PASS</div><div class="kpi-value" style="color:#1d9e75">${pass}</div><div class="kpi-subtext">${passRate}% Rate</div></div>
+        <div class="kpi-card"><div class="kpi-label">FAIL</div><div class="kpi-value" style="color:#e24b4a">${fail}</div><div class="kpi-subtext">${failRate}% Rate</div></div>
+        <div class="kpi-card"><div class="kpi-label">Avg Concentration</div><div class="kpi-value" style="color:#7f77dd;font-size:24px">${avgConc}</div><div class="kpi-subtext">mg/mL</div></div>
+        <div class="kpi-card"><div class="kpi-label">Avg Temperature</div><div class="kpi-value">${avgTemp}</div><div class="kpi-subtext">°C</div></div>
+    `;
+}
+
+function renderChart1() {
+    const pass = filtered.filter(r => r[5] === 'PASS').length;
+    const fail = filtered.length - pass;
+    const ctx = document.getElementById('chart1').getContext('2d');
+    if (charts.c1) charts.c1.destroy();
+    charts.c1 = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['PASS', 'FAIL'],
+            datasets: [{
+                data: [pass, fail],
+                backgroundColor: ['#1d9e75', '#e24b4a'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+        }
+    });
+}
+
+function renderChart2() {
+    const ops = [...new Set(filtered.map(r => r[3]))].sort();
+    const pass = ops.map(o => filtered.filter(r => r[3] === o && r[5] === 'PASS').length);
+    const fail = ops.map(o => filtered.filter(r => r[3] === o && r[5] === 'FAIL').length);
+    const ctx = document.getElementById('chart2').getContext('2d');
+    if (charts.c2) charts.c2.destroy();
+    charts.c2 = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ops,
+            datasets: [
+                { label: 'PASS', data: pass, backgroundColor: '#1d9e75' },
+                { label: 'FAIL', data: fail, backgroundColor: '#e24b4a' }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } }
+        }
+    });
+}
+
+function renderChart3() {
+    const pts = filtered.map((r, i) => ({ x: i + 1, y: r[1], st: r[5] }));
+    const passData = pts.filter(p => p.st === 'PASS').map(p => ({ x: p.x, y: p.y }));
+    const failData = pts.filter(p => p.st === 'FAIL').map(p => ({ x: p.x, y: p.y }));
+    const ctx = document.getElementById('chart3').getContext('2d');
+    if (charts.c3) charts.c3.destroy();
+    charts.c3 = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                { label: 'PASS', data: passData, borderColor: '#1d9e75', backgroundColor: '#1d9e75', showLine: true, borderWidth: 2, radius: 3, tension: 0.1 },
+                { label: 'FAIL', data: failData, borderColor: '#e24b4a', backgroundColor: '#e24b4a', radius: 4, showLine: false }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: { y: { min: 85, max: 115 } },
+            plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } }
+        }
+    });
+}
+
+function renderChart4() {
+    const temps = filtered.map(r => Math.floor(r[2]));
+    const minT = Math.min(...temps);
+    const maxT = Math.max(...temps);
+    const bins = {};
+    for (let i = minT; i <= maxT; i++) bins[i] = 0;
+    temps.forEach(t => bins[t]++);
+    const labels = Object.keys(bins).map(b => b + '°C');
+    const values = Object.values(bins);
+    const ctx = document.getElementById('chart4').getContext('2d');
+    if (charts.c4) charts.c4.destroy();
+    charts.c4 = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{ label: 'Count', data: values, backgroundColor: '#7f77dd' }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+function renderChart5() {
+    const passData = filtered.filter(r => r[5] === 'PASS').map(r => ({ x: r[2], y: r[1] }));
+    const failData = filtered.filter(r => r[5] === 'FAIL').map(r => ({ x: r[2], y: r[1] }));
+    const ctx = document.getElementById('chart5').getContext('2d');
+    if (charts.c5) charts.c5.destroy();
+    charts.c5 = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                { label: 'PASS', data: passData, backgroundColor: '#1d9e75', radius: 4 },
+                { label: 'FAIL', data: failData, backgroundColor: '#e24b4a', radius: 5 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: { title: { display: true, text: 'Temp (°C)' } },
+                y: { title: { display: true, text: 'Conc (mg/mL)' } }
+            },
+            plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } }
+        }
+    });
+}
+
+function renderOpSummary() {
+    const ops = [...new Set(filtered.map(r => r[3]))].sort();
+    let html = '';
+    ops.forEach(op => {
+        const pass = filtered.filter(r => r[3] === op && r[5] === 'PASS').length;
+        const fail = filtered.filter(r => r[3] === op && r[5] === 'FAIL').length;
+        const tot = pass + fail;
+        const pct = tot ? Math.round(pass / tot * 100) : 0;
+        html += `
+            <div class="operator-row">
+                <div class="operator-name">${op}</div>
+                <div class="operator-bar">
+                    <div class="bar-pass" style="width:${pct}%"></div>
+                    <div class="bar-fail" style="width:${100-pct}%"></div>
+                </div>
+                <div class="operator-stat">${pass}/${tot}</div>
+            </div>
+        `;
+    });
+    document.getElementById('opSummary').innerHTML = html;
+}
+
+function renderTable() {
+    const sorted = sortCol ? filtered.slice().sort((a, b) => {
+        let aVal = a[['id','conc','temp','op','ts','st'].indexOf(sortCol)];
+        let bVal = b[['id','conc','temp','op','ts','st'].indexOf(sortCol)];
+        return aVal < bVal ? -1 : 1;
+    }) : filtered;
+    
+    const rows = sorted.slice(0, 30).map(r => `
+        <tr>
+            <td>${r[0]}</td>
+            <td>${r[1].toFixed(2)}</td>
+            <td>${r[2].toFixed(1)}</td>
+            <td>${r[3]}</td>
+            <td>${r[4]}</td>
+            <td><span class="badge ${r[5] === 'PASS' ? 'badge-pass' : 'badge-fail'}">${r[5]}</span></td>
+        </tr>
+    `).join('');
+    document.getElementById('tableBody').innerHTML = rows;
+}
+
+function sortTable(col) {
+    sortCol = sortCol === col ? null : col;
+    renderTable();
+}
+
+init();
+    </script>
+</body>
+</html>
